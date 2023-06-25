@@ -1,0 +1,1 @@
+The first Blog post in the QBR investigation, which covers the process taken to collect the NFL QBR dataset, can be found at this link: http://btc.bashingbitcoin.com/2020/07/qbr-vs-passer-rating-part-1-data.html
