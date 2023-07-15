@@ -1,5 +1,4 @@
-##### QBR Blog 3 - Dash Application #####
-
+# example_code.py #
 ### Import Libraries ###
 import pandas as pd
 import numpy as np
@@ -8,96 +7,123 @@ from dash import html, dcc, dash, callback, Input, Output, State, dash_table
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-#from dash_bootstrap_templates import load_figure_template
 import dash_bootstrap_components as dbc
-
-### Initiate application ###
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.config.suppress_callback_exceptions = True
-
-# # the style arguments for the sidebar. We use position:fixed and a fixed width
-# SIDEBAR_STYLE = {
-#     "position": "fixed",
-#     "top": 0,
-#     "left": 0,
-#     "bottom": 0,
-#     "width": "16rem",
-#     "padding": "2rem 1rem",
-#     "background-color": "#f8f9fa",
-# }
-
-# # the styles for the main content position it to the right of the sidebar and
-# # add some padding.
-# CONTENT_STYLE = {
-#     "margin-left": "18rem",
-#     "margin-right": "2rem",
-#     "padding": "2rem 1rem",
-# }
 
 ### Read in Dataframe ###
 df = pd.read_csv('qbr3_df.csv')
 
-# Sort list of quarterbacks by Last Name #
 names_list = df.name.unique()
 sorted_names = sorted(names_list, key=lambda x: x.split()[1]) # makes it easier to search QBs
 
 teams_list = df.Tm.unique()
 sorted_teams = sorted(teams_list) # makes it easier to search Teams
 
-### Set application layout ###
-app.layout = html.Div(children=[
-        html.H1(children='QBR Data Visualization', style={'textAlign':'center'}),
+
+image_filename = 'football.png' # replace with your own image
+encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+
+content1 = html.Div(children=[
+        html.Div([html.Br()]),
+
         html.Div(children="Choose a Quarterback to Analyze"),
+
+        html.Div([html.Br()]),
 
         html.Div(children=[dcc.Dropdown(id = 'qb_dropdown', 
                      options=[{'label':i, 'value':i} for i in sorted_names],
                      placeholder = 'Select a Quarterback',
                      #value='Peyton Manning',
-                     searchable=True)]),
+                     searchable=True,
+                     style = {"background-color":"#151515", 'color':'Grey'})]),
 
-
-        # Break between Dropdown and QB Summary table #
         html.Div([html.Br()]),
 
         # Dash Table that takes data and columns from qb_summary_table Callback #
-        html.Div(children=[dash_table.DataTable(id='table')]),
+        html.Div(children=[dash_table.DataTable(id='table', style_cell_conditional=[{'textAlign':'left'}],
+            style_header = {"background-color":"#151515"}, style_data={'color':'White', 'backgroundColor':'Black'})])
 
-        # Break #
-        html.Div([html.Br()]),
+        ])
 
-        # Line Plot #
-        dcc.Graph(id='graph'),
+content1_b = html.Div(children=[dcc.Graph(id='graph', style={'display': 'inline-block'})])
 
+
+content2 = html.Div(children=[
         html.Div([html.Br()]),
 
         html.Div(children="Choose a Team to Analyze"),
 
+        html.Div([html.Br()]),
+
         html.Div(children=[dcc.Dropdown(id = 'team_dropdown', 
                      options=[{'label':i, 'value':i} for i in sorted_teams],
                      placeholder = 'Select a Team',
-                     searchable=True)]),
-                     #multi=True)]),
+                     searchable=True,
+                     style = {"background-color":"#151515", 'color':'Grey'})]),
 
         html.Div([html.Br()]),
-
         # Dash Table that takes data and columns from qb_summary_table Callback #
-        html.Div(children=[dash_table.DataTable(id='team-table')]),
+        html.Div(children=[dash_table.DataTable(id='team-table', style_cell_conditional=[{'textAlign':'left'}],
+            style_header = {"background-color":"#151515"}, style_data={'color':'White', 'backgroundColor':'Black'})])
 
-        html.Div([html.Br()]),
+    ])
 
-        # Line Plot #
-        dcc.Graph(id='team-graph'),
+content2_b = html.Div(children=[dcc.Graph(id='team-graph', style={'display': 'inline-block'})])
 
 
-        ])
-        
-# @callback(
-#     Output('qb-dropdown-output', 'children'),
-#     Input('qb_dropdown', 'value')
-# )
+### Initiate application ###
+app = dash.Dash(external_stylesheets=[dbc.themes.DARKLY])
+app.config.suppress_callback_exceptions = True
 
-# def update_output(value):
-#     return f'You have selected {value}'
+app.layout = html.Div([
+    html.Div([dcc.Location(id="url"),
+
+    html.Div([html.Br()]),
+
+    html.H1(children='QBR Data Visualization', style={'textAlign':'center'}),
+
+    html.Div([html.Br()]),
+
+    dcc.Tabs(id="tabs", value='qb-tab', children=[
+        dcc.Tab(label='Quarterback Comparison', value='qb-tab'),
+        dcc.Tab(label='Team Comparison', value='team-tab'),
+    ], colors={
+        "border": "Black",
+        "primary": "Black",
+        "background": "Grey"}),
+
+    html.Div(id='tabs-output')
+
+])])
+
+
+@callback(Output('tabs-output', 'children'),
+              Input('tabs', 'value'))
+
+def render_content(tab):
+    if tab == 'qb-tab':
+
+        #return html.Div(content1)
+        #return content1
+        # dbc.Row([
+        return html.Div(children=[dbc.Row([
+        dbc.Col(
+            dbc.Row([content1])),
+        dbc.Col(
+            dbc.Row([content1_b]))], 
+        )])
+
+        # return dbc.Row([
+        # dbc.Col(
+        #     dbc.Row([content1]))])
+
+    elif tab == 'team-tab':
+
+        return html.Div(children=[dbc.Row([
+        dbc.Col(
+            dbc.Row([content2])),
+        dbc.Col(
+            dbc.Row([content2_b]))], 
+        )])
 
 @callback(
        Output('table','data'),
@@ -180,9 +206,9 @@ def update_line_chart(value):
     #Add the figs to the subplot figure
     subplot_fig.add_traces(fig.data + fig1.data)
 
-    #FORMAT subplot figure
-    subplot_fig.update_layout(title="QBR and Passer Rating Over Time", yaxis=dict(title="QBR"), yaxis2=dict(title="Passer Rating"), 
-                              xaxis_title="Year", xaxis={'tickformat':'d'}, legend_title=value)
+    subplot_fig.update_layout(title_text="{} QBR and Passer Rating Over Time".format(value), title_x=0.5, yaxis=dict(title="QBR"), yaxis2=dict(title="Passer Rating"), 
+                              xaxis_title="Year", xaxis={'tickformat':'d'}, legend_title=value, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                              font_color = 'White')
     subplot_fig.update_xaxes(nticks=merged_gb.shape[0])
 
     #RECOLOR so as not to have overlapping colors
@@ -202,9 +228,9 @@ def update_line_chart(value):
        )
 
 def team_summary_table(value):
-
     # Subset dataframe by quarterback selected
     qb_df = df[df.Tm.isin([value])]
+
 
     # Find average QBR and Passer Rating grouped by Year
     mean_gb = qb_df.groupby('Year')[['TOTAL QBR','Rate']].mean()
@@ -238,58 +264,64 @@ def team_summary_table(value):
     Input('team_dropdown','value')
     )
 
-def update_line_chart(value):
+def update_team_line_chart(value):
     # Subset dataframe by quarterback selected
-    qb_df = df[df.Tm.isin([value])]
-
+    #qb_df = df[df.Tm.isin([value])]
+    qb_df = df[df.Tm == value]
+    
     # Find average QBR and Passer Rating grouped by Year
     mean_gb = qb_df.groupby('Year')[['TOTAL QBR','Rate']].mean()
     mean_gb = mean_gb.reset_index()
-
+    
     # Find number of games played by quarterback per year
     num_games = qb_df.groupby('Year')[['Rate']].count()
     num_games = num_games.reset_index()
-
+    
     # Merge the mean and count dataframes into one merged_gb
     merged_gb = mean_gb.merge(num_games, how='inner', on='Year')
-
+    
     # Set column names
     merged_gb.columns = ['Year','QBR','Passer Rating','Num Games']
-
+    
     # Show all results to the second decimal place
     merged_gb['QBR'] = merged_gb['QBR'].map('{:.2f}'.format).astype(float)
     merged_gb['Passer Rating'] = merged_gb['Passer Rating'].map('{:.2f}'.format).astype(float)
-
+    
     # Create subplot with secondary axis
     subplot_fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-    fig = px.line(merged_gb, x="Year", y="QBR", markers=True)
-    fig.update_yaxes(range = [0,100])
-    fig.update_layout(xaxis={'tickformat':'d'})
-
+    
+    fig2 = px.line(merged_gb, x="Year", y="QBR", markers=True)
+    fig2.update_yaxes(range = [0,100])
+    fig2.update_layout(xaxis={'tickformat':'d'})
+    
     fig1 = px.line(merged_gb, x="Year", y="Passer Rating", markers=True)
     fig1.update_yaxes(range = [0,159])
     fig1.update_layout(xaxis={'tickformat':'d'})
-
+    
     fig1.update_traces(yaxis="y2")
-
+    
     #Add the figs to the subplot figure
-    subplot_fig.add_traces(fig.data + fig1.data)
-
+    subplot_fig.add_traces(fig2.data + fig1.data)
+    
     #FORMAT subplot figure
-    subplot_fig.update_layout(title="QBR and Passer Rating Over Time", yaxis=dict(title="QBR"), yaxis2=dict(title="Passer Rating"), 
-                              xaxis_title="Year", xaxis={'tickformat':'d'}, legend_title=value)
-    subplot_fig.update_xaxes(nticks=merged_gb.shape[0])
+    subplot_fig.update_layout(title_text="{} QBR and Passer Rating Over Time".format(value), title_x=0.5, yaxis=dict(title="QBR"), 
+                              yaxis2=dict(title="Passer Rating"), 
+                              xaxis_title="Year", xaxis={'tickformat':'d'}, legend_title=value,
+                              paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                              font_color = 'White')
 
+    subplot_fig.update_xaxes(nticks=merged_gb.shape[0])
+    
     #RECOLOR so as not to have overlapping colors
     subplot_fig.for_each_trace(lambda t: t.update(line=dict(color=t.marker.color)))
-
+    
     subplot_fig['data'][0]['showlegend']=True
     subplot_fig['data'][0]['name']='QBR'
     subplot_fig['data'][1]['showlegend']=True
     subplot_fig['data'][1]['name']='Passer Rating'
-
+    
     return subplot_fig
+
 
 # Run Server with local host to port 8000
 if __name__ == '__main__':
