@@ -18,10 +18,6 @@ sorted_names = sorted(names_list, key=lambda x: x.split()[1]) # makes it easier 
 teams_list = df.Tm.unique()
 sorted_teams = sorted(teams_list) # makes it easier to search Teams
 
-
-image_filename = 'football.png' # replace with your own image
-encoded_image = base64.b64encode(open(image_filename, 'rb').read())
-
 content1 = html.Div(children=[
         html.Div([html.Br()]),
 
@@ -32,8 +28,8 @@ content1 = html.Div(children=[
         html.Div(children=[dcc.Dropdown(id = 'qb_dropdown', 
                      options=[{'label':i, 'value':i} for i in sorted_names],
                      placeholder = 'Select a Quarterback',
-                     #value='Peyton Manning',
                      searchable=True,
+                     persistence = True,
                      style = {"background-color":"#151515", 'color':'Grey'})]),
 
         html.Div([html.Br()]),
@@ -58,6 +54,7 @@ content2 = html.Div(children=[
                      options=[{'label':i, 'value':i} for i in sorted_teams],
                      placeholder = 'Select a Team',
                      searchable=True,
+                     persistence = True,
                      style = {"background-color":"#151515", 'color':'Grey'})]),
 
         html.Div([html.Br()]),
@@ -71,7 +68,7 @@ content2_b = html.Div(children=[dcc.Graph(id='team-graph', style={'display': 'in
 
 
 ### Initiate application ###
-app = dash.Dash(external_stylesheets=[dbc.themes.DARKLY])
+app = dash.Dash(external_stylesheets=[dbc.themes.DARKLY], title = 'QBR vs. Passer Rating')
 app.config.suppress_callback_exceptions = True
 
 app.layout = html.Div([
@@ -206,7 +203,12 @@ def update_line_chart(value):
     #Add the figs to the subplot figure
     subplot_fig.add_traces(fig.data + fig1.data)
 
-    subplot_fig.update_layout(title_text="{} QBR and Passer Rating Over Time".format(value), title_x=0.5, yaxis=dict(title="QBR"), yaxis2=dict(title="Passer Rating"), 
+    if value is None:
+        title_name = 'QBR and Passer Rating Over Time'
+    else:
+        title_name = "{} QBR and Passer Rating Over Time".format(value)
+
+    subplot_fig.update_layout(title_text=title_name, title_x=0.5, yaxis=dict(title="QBR"), yaxis2=dict(title="Passer Rating"), 
                               xaxis_title="Year", xaxis={'tickformat':'d'}, legend_title=value, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
                               font_color = 'White')
     subplot_fig.update_xaxes(nticks=merged_gb.shape[0])
@@ -302,9 +304,14 @@ def update_team_line_chart(value):
     
     #Add the figs to the subplot figure
     subplot_fig.add_traces(fig2.data + fig1.data)
+
+    if value is None:
+        title_name = 'QBR and Passer Rating Over Time'
+    else:
+        title_name = "{} QBR and Passer Rating Over Time".format(value)
     
     #FORMAT subplot figure
-    subplot_fig.update_layout(title_text="{} QBR and Passer Rating Over Time".format(value), title_x=0.5, yaxis=dict(title="QBR"), 
+    subplot_fig.update_layout(title_text=title_name, title_x=0.5, yaxis=dict(title="QBR"), 
                               yaxis2=dict(title="Passer Rating"), 
                               xaxis_title="Year", xaxis={'tickformat':'d'}, legend_title=value,
                               paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
