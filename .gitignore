@@ -3,5 +3,8 @@
 
 # Exclude following directories
 /Blog_5/additional_web_scraping_scripts
-/Blog_5/data
-/Blog_5/stathead_credentials 
+/Blog_5/data/*
+/Blog_5/stathead_credentials
+
+# Exclude .DS_Store
+/Blog_5/.DS_Store 
