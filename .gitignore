@@ -1,0 +1,7 @@
+# Jupter Notebook endpoints
+*.ipynb_checkpoints
+
+# Exclude following directories
+/Blog_5/additional_web_scraping_scripts
+/Blog_5/data
+/Blog_5/stathead_credentials 
